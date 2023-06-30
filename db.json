@@ -1,0 +1,39 @@
+{
+  "persons": [
+    {
+      "name": "Arto Hellas",
+      "number": "040-123456",
+      "id": 1
+    },
+    {
+      "name": "Ada Lovelace",
+      "number": "39-44-5323523",
+      "id": 2
+    },
+    {
+      "name": "Dan Abramov",
+      "number": "12-43-234345",
+      "id": 3
+    },
+    {
+      "name": "UKK",
+      "number": "007",
+      "id": 5
+    },
+    {
+      "name": "Mikko Mäkinen",
+      "number": "+358 50 3443932",
+      "id": 6
+    },
+    {
+      "name": "ukko pekkanen",
+      "number": "11 22 345",
+      "id": 8
+    },
+    {
+      "name": "Herra X",
+      "number": "salainen numero",
+      "id": 9
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+POST http://localhost:3001/api/persons
+Content-Type: application/json
+
+{
+    "name": "Mr V.S.Coderestplugin",
+    "number": "555-6795",
+    "id": 0
+}
