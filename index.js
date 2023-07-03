@@ -1,4 +1,4 @@
-// h 3.7 valmis, työn alla 3.9
+// h 3.9 valmis, työn alla 3.10
 
 const express = require('express')
 var morgan = require('morgan')  // logger
@@ -68,7 +68,13 @@ app.set('json spaces', 2)  // epävirallinen kikka, näkyy nätimmin selaimessa,
 
 // routes
 app.get('/', (req, res) => {
-    res.send('<h1>Hello World!</h1>')
+    const res_html = '<h1>Hello World!</h1>' +
+    '<ul>' + 
+      '<li><a href="/">main</a></li>' +
+      '<li><a href="/info">info</a></li>' +
+      '<li><a href="/api/persons">api persons</a></li>' +
+    '</ul>'
+    res.send(res_html)
     })
 
 app.get('/info', (req, res) => {
