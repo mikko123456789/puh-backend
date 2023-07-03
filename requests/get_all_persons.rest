@@ -1,1 +1,3 @@
-GET http://localhost:3001/api/persons
+GET http://puh-backend.onrender.com/api/persons
+
+# GET http://localhost:3001/api/persons

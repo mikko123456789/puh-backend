@@ -1,4 +1,5 @@
-// h 3.9 valmis, työn alla 3.10
+// h 3.10 valmis: https://puh-backend.onrender.com/  
+// työn alla 3.11
 
 const express = require('express')
 var morgan = require('morgan')  // logger
@@ -63,8 +64,10 @@ app.use(express.json())
 app.use(morgan('tiny'))
 // 3.9
 app.use(cors())
+// 3.11
+app.use(express.static('build'))
 
-app.set('json spaces', 2)  // epävirallinen kikka, näkyy nätimmin selaimessa, poista tarvittaessa
+app.set('json spaces', 2)  // epävirallinen kikka, json näkyy nätimmin selaimessa, poista tarvittaessa
 
 // routes
 app.get('/', (req, res) => {
