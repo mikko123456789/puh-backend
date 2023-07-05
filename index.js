@@ -1,75 +1,35 @@
-// h 3.10 valmis: https://puh-backend.onrender.com/  
-// työn alla 3.11
+// 3.12 valmis: https://puh-backend.onrender.com/
+// 3.18* valmis
 
 const express = require('express')
 var morgan = require('morgan')  // logger
 const cors = require('cors')
+require('dotenv').config()
 const app = express()
 
-let persons = [
-      {
-        "name": "Arto Hellas",
-        "number": "040-123456",
-        "id": 1
-      },
-      {
-        "name": "Ada Lovelace",
-        "number": "39-44-5323523",
-        "id": 2
-      },
-      {
-        "name": "Dan Abramov",
-        "number": "12-43-234345",
-        "id": 3
-      },
-      {
-        "name": "UKK",
-        "number": "007",
-        "id": 5
-      },
-      {
-        "name": "Mikko Mäkinen",
-        "number": "+358 99 999999",
-        "id": 6
-      },
-      {
-        "name": "ukko pekkanen",
-        "number": "11 22 345",
-        "id": 8
-      },
-      {
-        "name": "Herra X",
-        "number": "salainen numero",
-        "id": 9
-      },
-      {
-        "name": "Uusi Tyyppi",
-        "number": "555-6789",
-        "id": 99
-      }
-]
+const Person = require('./models/person')
 
-const infotext = 'Phonebook has info for ' + persons.length + ' people'
-const currentdate = new Date()
-
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
-}
+// function getRandomInt(min, max) {
+//   min = Math.ceil(min);
+//   max = Math.floor(max);
+//   return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
+// }
 
 // middleware
+
+// 3.11
+app.use(express.static('build'))
 app.use(express.json())
 // 3.7
 app.use(morgan('tiny'))
 // 3.9
 app.use(cors())
-// 3.11
-app.use(express.static('build'))
 
-app.set('json spaces', 2)  // epävirallinen kikka, json näkyy nätimmin selaimessa, poista tarvittaessa
+app.set('json spaces', 2)
 
 // routes
+
+// tämä korvautuu frontilla
 app.get('/', (req, res) => {
     const res_html = '<h1>Hello World!</h1>' +
     '<ul>' + 
@@ -81,75 +41,158 @@ app.get('/', (req, res) => {
     })
 
 app.get('/info', (req, res) => {
-    console.log(infotext + '\n' + currentdate)
-    res.send('<p>' + infotext + '</p><p>' + currentdate + '</p>')
+    var infotext, currentdate
+    console.log(`Get persons from Mongodb`)
+    Person.find({}).then(persons => {
+      infotext = 'Phonebook has info for ' + persons.length + ' people'
+      currentdate = new Date()
+      console.log(infotext + '\n' + currentdate)
+      res.send('<p>' + infotext + '</p><p>' + currentdate + '</p>')
+    })
     })
 
 app.get('/api/persons', (req, res) => {
     // console.log(req.headers)
-    console.log(`Get persons`)
-    res.json(persons)
+    console.log(`Get persons from Mongodb`)
+    Person.find({}).then(persons => {
+      res.json(persons)
     })
+  })
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = req.params.id  // voisi olla id = Number(request.params.id), jolloin ei tarvita jatkossa toStringiä, ks. app.delete
-    const person = persons.find(person => person.id.toString() === id)
-    if(person) {
-        console.log(`Get Person ${person.id}`)
-        res.json(person)
-    } 
-    else {
-        console.log(`Error: ${id} not found, 404`)
-        res.status(404).end()
-      }
-    })
+app.get('/api/persons/:id', (req, res, next) => {
+    const id = req.params.id
+    Person.findById(id)
+      .then(person => {
+        if (person) {
+          res.json(person)
+        } else {
+          console.log(`Error: ${id} not found, 404`)
+          res.status(404).send(`error: "${id} not found", status: "404"`)
+        }
+      })
+      .catch(error => next(error))
+      // { console.log(error)
+      //   res.status(400).send({ error: 'malformatted id', status: '400' })
+      // })
+  })
 
-app.delete('/api/persons/:id', (req, res) => {
-    // console.log(req.headers)
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
+  // vanhaa
+    // Person.find({}).then(persons => {
+    //   // tämä kannattaisi mongoosella tehdä näin:
+    //   // .findById(request.params.id)...
+    //   // const person = persons.find(person => person.id.toString() === id)
+    //   const person = persons.find(person => person.id === id)
+    //   if(person) {
+    //       console.log(`Get Person ${person.id}`)
+    //       res.json(person)
+    //   } 
+    //   else {
+    //       console.log(`Error: ${id} not found, 404`)
+    //       // res.status(404).end()
+    //       res.status(404).send(`Error: ${id} not found, 404`)
+    //     }
+    // })
+
+  app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+  
+    const person = {
+      name: body.name,
+      number: body.number
+    }
+  
+    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+      .then(updatedPerson => {
+        res.json(updatedPerson)
+      })
+      .catch(error => next(error))
+  })
+
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+  .then(result => {
     res.status(204).end()
+  })
+  .catch(error => next(error))
+
+    // vanha
+    // console.log(req.headers)
+    // const id = Number(req.params.id)
+    // persons = persons.filter(person => person.id !== id)
+    // res.status(204).end()
   })
 
 app.post('/api/persons', (req, res) => {
+    // const person = req.body
+    // console.log(req.body)
+
+    // person.id = getRandomInt(1,9999999)
+    // let olijo = false
+    // if (persons.findIndex(p => p.name === req.body.name) > -1) olijo = true
+    // console.log(req.body.name, persons.findIndex(p => p.name === req.body.name), olijo)
+
+    const person = new Person({
+      name: req.body.name,
+      number: req.body.number
+    })
+
+    // console.log(`Get persons from Mongodb`)
+    // Person.find({}).then(persons => {
+    //   res.json(persons)
+    // })
+
+    // persons = persons.concat(person)
+    // console.log('new person:', person)
     
-    const person = req.body
-    console.log(person)
-    
-    // const maxId = persons.length > 0
-    // ? Math.max(...persons.map(n => n.id)) 
-    // : 0
+    person.save()
+    .then(result => {
+        console.log(`added ${person.name} number ${person.number} to phonebook`)
+    })
 
-    // 3.8 kesken
-    //morgan.token('type', function (req, res) { return JSON.stringify(req.headers['content-type']) })
+    // console.log('New person: ' + JSON.stringify(person))
+    res.json(person)
 
-    person.id = getRandomInt(1,9999999)
-    let olijo = false
-    if (persons.findIndex(p => p.name === req.body.name) > -1) olijo = true
-    console.log(req.body.name, persons.findIndex(p => p.name === req.body.name), olijo)
-
-    persons = persons.concat(person)
-
-    if (!person.name || olijo) {
-      console.log('400 name missing or already existing')
-      return res.status(400).json({ 
-        error: 'name missing or already existing' 
-      })
-    } else if (!person.number) {
-      console.log('400 number missing')
-      return res.status(400).json({ 
-        error: 'number missing' 
-      })
-    } else if (persons.indexOf(req.params.name) > -1) {
-      console.log('400 name already exists')
-      return res.status(400).json({ 
-        error: 'name already exists' 
-      })      
-    } else {
-      console.log('New person: ' + JSON.stringify(person))
-      res.json(person)
-    }
+  //   if (!person.name || olijo) {
+  //     console.log('400 name missing or already existing')
+  //     return res.status(400).json({ 
+  //       error: 'name missing or already existing' 
+  //     })
+  //   } else if (!person.number) {
+  //     console.log('400 number missing')
+  //     return res.status(400).json({ 
+  //       error: 'number missing' 
+  //     })
+  //   } else if (persons.indexOf(req.params.name) > -1) {
+  //     console.log('400 name already exists')
+  //     return res.status(400).json({ 
+  //       error: 'name already exists' 
+  //     })      
+  //   } else {
+  //     console.log('New person: ' + JSON.stringify(person))
+  //     res.json(person)
+  //   }
   })
+
+
+// more middleware
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+// olemattomien osoitteiden käsittely
+app.use(unknownEndpoint)
+  
+const errorHandler = (error, request, response, next) => {
+  console.log(error.name)
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  next(error)
+}
+// tämä tulee kaikkien muiden middlewarejen rekisteröinnin jälkeen!
+app.use(errorHandler)
 
 // const PORT = 3001
 const PORT = process.env.PORT || 3001
